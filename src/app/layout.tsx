@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Iftar Share",
+  title: "Fa6oor",
   description: "Share your Iftar meals during Ramadan",
 };
 

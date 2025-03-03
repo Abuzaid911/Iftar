@@ -6,7 +6,18 @@ import { format } from 'date-fns'
 import ShareButtons from './ShareButtons'
 
 export default function DailyWinner() {
-  const [winner, setWinner] = useState<any>(null)
+  const [winner, setWinner] = useState<{
+    id: string;
+    imageUrl: string;
+    createdAt: string;
+    user: {
+      name: string;
+      image: string | null;
+    };
+    _count: {
+      votes: number;
+    };
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 

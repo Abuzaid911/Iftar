@@ -9,14 +9,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '9')
+    const offset = (page - 1) * limit
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
     const posts = await prisma.post.findMany({
+      where: {
+        createdAt: {
+          gte: today,
+        },
+      },
       include: {
         user: {
           select: {
             name: true,
             image: true,
+            email: true,
           },
         },
         _count: {
@@ -28,6 +42,8 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      skip: offset,
+      take: limit,
     })
 
     return NextResponse.json(posts)
