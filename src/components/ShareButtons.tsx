@@ -4,31 +4,47 @@ import {
   TwitterShareButton, 
   FacebookShareButton, 
   WhatsappShareButton,
+  TelegramShareButton,
+  LinkedinShareButton,
   TwitterIcon,
   FacebookIcon,
-  WhatsappIcon
+  WhatsappIcon,
+  TelegramIcon,
+  LinkedinIcon
 } from 'react-share'
 
 interface ShareButtonsProps {
   url: string
   title: string
   image?: string
+  description?: string
 }
 
-export default function ShareButtons({ url, title, image }: ShareButtonsProps) {
+export default function ShareButtons({ url, title, image, description }: ShareButtonsProps) {
   const shareText = `Check out this Iftar post! ${title}`
+  const fullDescription = description ? `${shareText}\n\n${description}` : shareText
 
   return (
-    <div className="flex space-x-2">
-      <TwitterShareButton url={url} title={shareText}>
-        <TwitterIcon size={32} round />
+    <div className="flex flex-wrap gap-2">
+      <TwitterShareButton url={url} title={shareText} via="IftarApp" hashtags={['Iftar', 'Ramadan']}>
+        <TwitterIcon size={32} round className="hover:opacity-80 transition-opacity" />
       </TwitterShareButton>
-      <FacebookShareButton url={url} quote={shareText} hashtag="#IftarShare">
-        <FacebookIcon size={32} round />
+      
+      <FacebookShareButton url={url} quote={fullDescription} hashtag="#Ramadan">
+        <FacebookIcon size={32} round className="hover:opacity-80 transition-opacity" />
       </FacebookShareButton>
-      <WhatsappShareButton url={url} title={shareText}>
-        <WhatsappIcon size={32} round />
+      
+      <WhatsappShareButton url={url} title={fullDescription}>
+        <WhatsappIcon size={32} round className="hover:opacity-80 transition-opacity" />
       </WhatsappShareButton>
+
+      <TelegramShareButton url={url} title={fullDescription}>
+        <TelegramIcon size={32} round className="hover:opacity-80 transition-opacity" />
+      </TelegramShareButton>
+
+      <LinkedinShareButton url={url} title={title} summary={description} source="Iftar App">
+        <LinkedinIcon size={32} round className="hover:opacity-80 transition-opacity" />
+      </LinkedinShareButton>
     </div>
   )
 }

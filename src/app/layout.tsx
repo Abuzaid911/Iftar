@@ -13,10 +13,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Fa6oor",
-  description: "Share your Iftar meals during Ramadan",
-};
+export const metadata = {
+  title: 'Iftar Photo Competition',
+  description: 'Share and vote for the best Iftar photos!',
+  openGraph: {
+    title: 'Iftar Photo Competition',
+    description: 'Share and vote for the best Iftar photos!',
+    images: ['/og-image.jpg'],
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Iftar Competition',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Iftar Photo Competition',
+    description: 'Share and vote for the best Iftar photos!',
+    images: ['/og-image.jpg'],
+    creator: '@yourtwitterhandle',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
+}
 
 export default function RootLayout({
   children,

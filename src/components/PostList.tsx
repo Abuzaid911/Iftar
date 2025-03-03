@@ -11,6 +11,7 @@ import ImageLightbox from './ImageLightbox'
 // Add these imports at the top
 import { useInView } from 'react-intersection-observer'
 import LoadingBar from './LoadingBar'
+import PostShare from './PostShare'
 
 export default function PostList() {
   const { data: session } = useSession()
@@ -151,19 +152,7 @@ export default function PostList() {
         isDeleting={isDeleting}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post: {
-          id: string;
-          imageUrl: string;
-          createdAt: string;
-          user: {
-            email: string;
-            name: string;
-            image: string | null;
-          };
-          _count: {
-            votes: number;
-          };
-        }, index: number) => (
+        {posts.map((post, index) => (
           <motion.div key={post.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -190,17 +179,42 @@ export default function PostList() {
               </div>
             </div>
             <div className="p-5">
-              <div className="flex items-center space-x-3 mb-3">
-                <img
-                  src={post.user.image || '/default-avatar.png'}
-                  alt={post.user.name}
-                  className="w-8 h-8 rounded-full border-2 border-amber-500/20"
-                />
-                <div>
-                  <span className="font-medium text-amber-500">{post.user.name}</span>
-                  <p className="text-xs text-gray-400">
-                    {format(new Date(post.createdAt), 'MMM d, yyyy')}
-                  </p>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={post.user.image || '/default-avatar.png'}
+                    alt={post.user.name}
+                    className="w-8 h-8 rounded-full border-2 border-amber-500/20"
+                  />
+                  <div>
+                    <span className="font-medium text-amber-500">{post.user.name}</span>
+                    <p className="text-xs text-gray-400">
+                      {format(new Date(post.createdAt), 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <PostShare post={post} />
+                  {session?.user?.email === post.user.email && (
+                    <button
+                      onClick={() => setDeletePostId(post.id)}
+                      className="p-2 rounded-full hover:bg-red-500/10 transition-colors"
+                    >
+                      <svg 
+                        className="w-5 h-5 text-red-500" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
               {session && session.user?.email !== post.user.email && (
@@ -225,7 +239,7 @@ export default function PostList() {
                       <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                       </svg>
-                     
+                      Love
                     </>
                   )}
                 </button>
