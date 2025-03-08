@@ -1,67 +1,57 @@
-import { NextResponse } from 'next/server'
-import { redirect } from 'next/navigation'
+// src/app/api/auth/error/route.ts
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const error = searchParams.get('error')
-  const errorDescription = searchParams.get('error_description')
-  const callbackUrl = searchParams.get('callbackUrl')
+  const { searchParams } = new URL(request.url);
+  const error = searchParams.get('error');
+  
+  console.error('Auth Error:', {
+    error,
+    description: searchParams.get('error_description'),
+    callback: searchParams.get('callbackUrl')
+  });
 
-  // If no error is present, redirect to home
-  if (!error && !errorDescription) {
-    return redirect('/')
-  }
+  let errorMessage = 'An authentication error occurred';
+  let statusCode = 500;
 
-  let errorMessage = errorDescription || 'An authentication error occurred'
-  let statusCode = 500
-
+  // Map common NextAuth errors to user-friendly messages
   switch (error) {
     case 'Configuration':
-      errorMessage = 'Server configuration error. Please check your environment variables.'
-      statusCode = 500
-      break
+      errorMessage = 'Server configuration error';
+      break;
     case 'AccessDenied':
-      errorMessage = 'Access denied. Please sign in with an authorized account.'
-      statusCode = 403
-      break
+      errorMessage = 'Access denied';
+      statusCode = 403;
+      break;
     case 'Verification':
-      errorMessage = 'The verification link is invalid or has expired.'
-      statusCode = 400
-      break
+      errorMessage = 'Verification link invalid or expired';
+      statusCode = 400;
+      break;
     case 'OAuthSignin':
-      errorMessage = 'Error occurred during sign in. Please try again.'
-      statusCode = 400
-      break
     case 'OAuthCallback':
-      errorMessage = 'Error occurred during authentication callback.'
-      statusCode = 400
-      break
     case 'OAuthCreateAccount':
-      errorMessage = 'Could not create user account.'
-      statusCode = 400
-      break
     case 'EmailCreateAccount':
-      errorMessage = 'Could not create user account. Email may be already in use.'
-      statusCode = 400
-      break
     case 'Callback':
-      errorMessage = 'Error occurred during authentication callback.'
-      statusCode = 400
-      break
-    case 'TokenExpired':
-      errorMessage = 'Your session has expired. Please sign in again.'
-      statusCode = 401
-      break
+      errorMessage = 'Error during authentication';
+      statusCode = 400;
+      break;
+    case 'CredentialsSignin':
+      errorMessage = 'Invalid credentials';
+      statusCode = 401;
+      break;
+    case 'SessionRequired':
+      errorMessage = 'Please sign in to access this page';
+      statusCode = 401;
+      break;
     default:
-      statusCode = 500
+      statusCode = 500;
   }
 
   return NextResponse.json(
     { 
       error: errorMessage,
       code: error || 'UNKNOWN_ERROR',
-      timestamp: new Date().toISOString(),
-      redirectUrl: callbackUrl || '/'
+      timestamp: new Date().toISOString()
     },
     { 
       status: statusCode,
@@ -70,5 +60,5 @@ export async function GET(request: Request) {
         'Content-Type': 'application/json'
       }
     }
-  )
+  );
 }
