@@ -1,6 +1,7 @@
 // src/lib/auth.ts
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { getServerSession } from 'next-auth/next';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,14 +15,12 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async session({ session, token }) {
-      // Simple session callback
       if (session?.user && token?.sub) {
         session.user.id = token.sub;
       }
       return session;
     },
     async jwt({ token, user }) {
-      // Simple JWT callback
       if (user) {
         token.userId = user.id;
       }
@@ -29,5 +28,8 @@ export const authOptions: NextAuthOptions = {
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // Enable debug logs
+  debug: true,
 };
+
+// Make sure to export the auth function
+export const auth = () => getServerSession(authOptions);
