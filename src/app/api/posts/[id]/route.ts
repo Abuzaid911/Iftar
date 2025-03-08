@@ -1,63 +1,69 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
-import { v2 as cloudinary } from 'cloudinary'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+interface RouteContext {
+  params: Promise<{
+    id: string;
+  }>;
+}
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+export async function POST(
+  request: NextRequest,
+  context: RouteContext
 ) {
-  const session = await getServerSession()
-  
+  const session = await getServerSession();
+  const { id } =await context.params;
+
   if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const post = await prisma.post.findUnique({
-      where: { id: params.id },
-      select: { userId: true, imageUrl: true },
-    })
-
-    if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
-    }
-
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-    })
+    });
 
-    if (post.userId !== user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const imageUrls = post.imageUrl.split(',')
-    const deletePromises = imageUrls.map(url => {
-      const publicId = url.split('/').pop()?.split('.')[0]
-      if (publicId) {
-        return cloudinary.uploader.destroy(`iftar/${publicId}`)
-      }
-      return Promise.resolve()
-    })
+    const post = await prisma.post.findUnique({
+      where: { id },
+    });
 
-    await Promise.all([
-      ...deletePromises,
-      prisma.vote.deleteMany({ where: { postId: params.id } }),
-      prisma.post.delete({ where: { id: params.id } })
-    ])
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
 
-    return NextResponse.json({ success: true })
+    const existingVote = await prisma.vote.findFirst({
+      where: {
+        postId: id,
+        userId: user.id,
+      },
+    });
+
+    if (existingVote) {
+      await prisma.vote.delete({
+        where: { id: existingVote.id },
+      });
+
+      return NextResponse.json({ success: true, action: 'removed' });
+    } else {
+      await prisma.vote.create({
+        data: {
+          postId: id,
+          userId: user.id,
+        },
+      });
+
+      return NextResponse.json({ success: true, action: 'added' });
+    }
   } catch (error) {
-    console.error('Error deleting post:', error)
+    console.error('Error toggling vote:', error);
     return NextResponse.json(
-      { error: 'Error deleting post' },
+      { error: 'Error toggling vote' },
       { status: 500 }
-    )
+    );
   }
 }

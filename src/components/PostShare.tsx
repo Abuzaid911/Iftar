@@ -22,25 +22,22 @@ export default function PostShare({ post }: PostShareProps) {
     try {
       await navigator.clipboard.writeText(shareUrl)
       toast.success('Link copied to clipboard!', {
-        style: {
-          background: '#000',
-          color: '#F7B538',
-          border: '1px solid rgba(247, 181, 56, 0.1)',
-        },
-        iconTheme: {
-          primary: '#F7B538',
-          secondary: '#000',
-        },
+        style: { background: '#000', color: '#F7B538', border: '1px solid rgba(247, 181, 56, 0.1)' },
+        iconTheme: { primary: '#F7B538', secondary: '#000' },
       })
+      setIsOpen(false)
     } catch (error) {
-      console.error('Failed to copy:', error)
+       console.log(error)
+      toast.error('Failed to copy link', {
+        style: { background: '#000', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.1)' },
+      })
     }
   }
 
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(true)}
         className="p-2 rounded-full hover:bg-amber-500/10 transition-colors"
       >
         <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,8 +56,6 @@ export default function PostShare({ post }: PostShareProps) {
             <ShareButtons
               url={shareUrl}
               title="Check out this amazing Iftar post!"
-              image={post.imageUrl}
-              description={post.description}
             />
             <button
               onClick={handleCopyLink}
@@ -71,6 +66,6 @@ export default function PostShare({ post }: PostShareProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }

@@ -1,21 +1,40 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
 
 export default function LoadingBar() {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setProgress(30)
+    }, 100)
+
+    const timer2 = setTimeout(() => {
+      setProgress(60)
+    }, 500)
+
+    const timer3 = setTimeout(() => {
+      setProgress(80)
+    }, 1000)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(timer2)
+      clearTimeout(timer3)
+    }
+  }, [])
+
   return (
-    <motion.div
-      className="fixed top-0 left-0 right-0 h-1 bg-amber-500/20 z-50"
-      initial={{ scaleX: 0, transformOrigin: '0%' }}
-      animate={{ scaleX: 1 }}
-      transition={{ duration: 1.5 }}
-    >
+    <div className="fixed top-0 left-0 right-0 z-50">
       <motion.div
-        className="absolute top-0 left-0 bottom-0 bg-amber-500"
-        initial={{ scaleX: 0, transformOrigin: '0%' }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1 }}
+        className="h-1 bg-amber-500"
+        initial={{ width: "0%" }}
+        animate={{ width: `${progress}%` }}
+        transition={{ ease: "easeOut" }}
       />
-    </motion.div>
+    </div>
   )
 }
+

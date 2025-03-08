@@ -1,0 +1,16 @@
+{
+  "name": "Iftar Photo Competition",
+  "short_name": "Fa6oor",
+  "description": "Share and vote for Iftar meals",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#F7B538",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

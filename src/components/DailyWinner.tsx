@@ -6,25 +6,38 @@ import ShareButtons from './ShareButtons'
 import { isWinnerSelectionTime } from '@/lib/utils'
 import Confetti from 'react-confetti'
 import { useWindowSize } from 'react-use'
+import Image from 'next/image'
+
+interface Winner {
+  id: string;
+  imageUrl: string | null;
+  createdAt: string;
+  user: {
+    name: string;
+    image: string | null;
+  };
+  _count: {
+    votes: number;
+  };
+}
 
 export default function DailyWinner() {
-  const [winner, setWinner] = useState<{
-    id: string;
-    imageUrl: string;
-    createdAt: string;
-    user: {
-      name: string;
-      image: string | null;
-    };
-    _count: {
-      votes: number;
-    };
-  } | null>(null)
+  const { width, height } = useWindowSize()
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [winner, setWinner] = useState<Winner | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [timeUntilAnnouncement, setTimeUntilAnnouncement] = useState('')
+  const [origin, setOrigin] = useState('')
 
-  // Countdown effect
+  // Get window.location.origin safely
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin)
+    }
+  }, [])
+
+  // Countdown effect (updates every second)
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date()
@@ -38,39 +51,43 @@ export default function DailyWinner() {
       const diff = target.getTime() - now.getTime()
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      
-      setTimeUntilAnnouncement(`${hours}h ${minutes}m`)
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+      setTimeUntilAnnouncement(`${hours}h ${minutes}m ${seconds}s`)
     }
 
     updateCountdown()
-    const interval = setInterval(updateCountdown, 60000)
+    const interval = setInterval(updateCountdown, 1000) // Update every second
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch winner effect
+  // Fetch winner effect with cleanup to prevent memory leaks
   useEffect(() => {
+    let isMounted = true
     const fetchWinner = async () => {
       try {
         if (isWinnerSelectionTime()) {
           const response = await fetch('/api/winners/daily')
           const data = await response.json()
-          setWinner(data)
+          if (isMounted) {
+            setWinner(data)
+            setShowConfetti(true) // Show confetti when winner is fetched
+          }
         }
       } catch (error) {
         console.error('Error fetching winner:', error)
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     fetchWinner()
-    const interval = setInterval(() => {
-      if (isWinnerSelectionTime()) {
-        fetchWinner()
-      }
-    }, 60000)
-    
-    return () => clearInterval(interval)
+    const interval = setInterval(fetchWinner, 60000) // Check every minute
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   if (loading) {
@@ -86,29 +103,18 @@ export default function DailyWinner() {
   if (!winner) {
     return (
       <div className="bg-black border border-amber-500/10 rounded-xl p-8 text-center">
-        <h2 className="text-2xl font-bold text-amber-500 mb-2">Today's Winner</h2>
+        <h2 className="text-2xl font-bold text-amber-500 mb-2">Today&apos;s Winner</h2>
         <p className="text-amber-500/60 mb-2">Winner announcement in</p>
         <p className="text-2xl font-bold text-amber-500">{timeUntilAnnouncement}</p>
       </div>
     )
   }
 
-  const images = winner.imageUrl.split(',')
-  const { width, height } = useWindowSize()
-  const [showConfetti, setShowConfetti] = useState(false)
-
-  // Add confetti effect when winner is displayed
-  useEffect(() => {
-    if (winner) {
-      setShowConfetti(true)
-      const timer = setTimeout(() => setShowConfetti(false), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [winner])
+  const images = winner?.imageUrl?.split(',') ?? ['/default-image.jpg'];
 
   return (
-    <>
-      {showConfetti && (
+    <div className="relative">
+      {showConfetti && 
         <Confetti
           width={width}
           height={height}
@@ -116,13 +122,14 @@ export default function DailyWinner() {
           numberOfPieces={200}
           colors={['#F7B538', '#FFD700', '#FFA500']}
         />
-      )}
+      }
       <div className="bg-black border border-amber-500/10 rounded-xl overflow-hidden hover:border-amber-500/20 transition-all duration-300">
         <div className="relative aspect-video group">
-          <img
+          <Image
             src={images[currentImageIndex]}
             alt="Winner"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
           {images.length > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
@@ -137,37 +144,39 @@ export default function DailyWinner() {
               ))}
             </div>
           )}
-        <div className="absolute top-4 left-4 bg-black/90 backdrop-blur-sm px-4 py-2 rounded-full transform -translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <span className="text-amber-500 font-bold">🏆 Today's Winner</span>
+          <div className="absolute top-4 left-4 bg-black/90 backdrop-blur-sm px-4 py-2 rounded-full transform -translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <span className="text-amber-500 font-bold">🏆 Today&apos;s Winner</span>
+          </div>
         </div>
-      </div>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <img
-              src={winner.user.image || '/default-avatar.png'}
-              alt={winner.user.name}
-              className="w-10 h-10 rounded-full border-2 border-amber-500"
-            />
-            <div>
-              <h3 className="font-medium text-amber-500">{winner.user.name}</h3>
-              <p className="text-xs text-amber-500/60">
-                {format(new Date(winner.createdAt), 'MMM d, yyyy • h:mm a')}
-              </p>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <Image
+                src={winner.user.image || '/default-avatar.png'}
+                alt={winner.user.name}
+                width={40}
+                height={40}
+                className="rounded-full border-2 border-amber-500"
+              />
+              <div>
+                <h3 className="font-medium text-amber-500">{winner.user.name}</h3>
+                <p className="text-xs text-amber-500/60">
+                  {format(new Date(winner.createdAt), 'MMM d, yyyy • h:mm a')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-amber-500">
+                {winner._count.votes} votes
+              </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-amber-500">
-              {winner._count.votes} votes
-            </span>
-          </div>
+          <ShareButtons
+            url={`${origin}/posts/${winner.id}`}
+            title="Check out today&apos;s winning Iftar!"
+          />
         </div>
-        <ShareButtons
-          url={`${window.location.origin}/posts/${winner.id}`}
-          title="Check out today's winning Iftar!"
-        />
       </div>
     </div>
-    </>
   )
 }

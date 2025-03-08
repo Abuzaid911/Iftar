@@ -37,12 +37,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No posts found for today' }, { status: 404 })
     }
 
-    // Update the post to mark it as a winner
-    await prisma.post.update({
-      where: { id: winner.id },
-      data: { isWinner: true },
-    })
-
+    // Remove the update since isWinner field doesn't exist in schema
     return NextResponse.json(winner)
   } catch (error) {
     console.error('Error determining winner:', error)

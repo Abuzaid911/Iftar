@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import MoonLogo from './MoonLogo'
+import Image from 'next/image'
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
@@ -21,15 +22,17 @@ export default function Layout({ children }: { children: ReactNode }) {
               </h1>
             </div>
             <div className="flex items-center">
-              {session ? (
+              {session?.user ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={session.user?.image || '/default-avatar.png'}
-                      alt={session.user?.name || ''}
+                    <Image
+                      src={session.user.image || '/default-avatar.png'}
+                      alt={session.user.name || 'User'}
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full border-2 border-amber-500/20"
                     />
-                    <span className="text-amber-500 font-medium">{session.user?.name}</span>
+                    <span className="text-amber-500 font-medium">{session.user.name}</span>
                   </div>
                   <button
                     onClick={() => signOut()}
