@@ -71,7 +71,7 @@ export default function TrendingPosts() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-amber-500 flex items-center">
           <span className="mr-2">🔥</span>
-          Trending Today
+          Trending Today!
         </h2>
         <div className="text-xs text-amber-500/60 bg-amber-500/10 px-2 py-1 rounded-full">
           Live
