@@ -2,38 +2,30 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 const handler = NextAuth({
-  debug: process.env.NODE_ENV !== 'production',
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
     }),
   ],
+  // Fall back to JWT if database connection fails
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  // Add robust error handling
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Ensure DB connection before sign-in
-      const connected = await ensureConnection();
-      if (!connected) {
-        throw new Error('Database connection failed during sign-in');
-      }
+      console.log('[NextAuth] Sign In Attempt:', { 
+        email: user.email,
+        provider: account?.provider 
+      });
       return true;
     },
     async session({ session, token }) {
+      console.log('[NextAuth] Session callback triggered');
       if (session?.user && token?.sub) {
         session.user.id = token.sub;
       }
@@ -41,15 +33,14 @@ const handler = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
+        console.log('[NextAuth] JWT callback - User found');
         token.userId = user.id;
       }
       return token;
     }
   },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
 });
 
 export { handler as GET, handler as POST };
