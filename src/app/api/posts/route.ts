@@ -1,8 +1,8 @@
 // src/app/api/posts/route.ts
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { v2 as cloudinary } from 'cloudinary'
-import { prisma } from '@/lib/prisma'
+import { prisma, ensureConnection } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 // Enhanced cloudinary configuration with proper error handling
 cloudinary.config({
@@ -15,8 +15,8 @@ export async function GET(request: Request) {
   console.log('[API] GET /api/posts - Request received');
   
   try {
-    // Test database connection first
-    await prisma.$connect();
+    // Test database connection first using the more robust method
+    await ensureConnection();
     console.log('[API] Database connection successful');
 
     const { searchParams } = new URL(request.url);
@@ -105,8 +105,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // Check authentication first
-    const session = await getServerSession()
+    // Check authentication first using the auth function from lib/auth
+    const session = await auth()
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -220,7 +220,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getServerSession()
+  // Use the auth function from lib/auth
+  const session = await auth()
   const { searchParams } = new URL(request.url)
   const postId = searchParams.get('id')
   
