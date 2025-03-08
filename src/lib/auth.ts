@@ -1,7 +1,6 @@
-// src/lib/auth.ts
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -28,8 +27,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true,
+  debug: process.env.NODE_ENV !== 'production',
 };
 
-// Make sure to export the auth function
 export const auth = () => getServerSession(authOptions);
