@@ -2,10 +2,8 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
 // In your [...nextauth]/route.ts file
+// src/app/api/auth/[...nextauth]/route.ts
 export const authOptions: NextAuthOptions = {
-  // Remove the adapter line temporarily
-  // adapter: PrismaAdapter(prisma),
-  
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -15,7 +13,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  // Simplify callbacks
   callbacks: {
     async session({ session, token }) {
       if (session?.user && token?.sub) {
