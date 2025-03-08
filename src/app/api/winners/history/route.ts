@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  return NextResponse.json({ winners: [] })
+  try {
+    return NextResponse.json({
+      winners: [],
+      status: 'success'
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }
