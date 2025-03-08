@@ -46,21 +46,24 @@ export default function PostList() {
     }
 
     try {
-      const response = await fetch(`/api/posts?page=${pageNum}&limit=9`)
+      const response = await fetch(`/api/posts?page=${pageNum}&limit=9&excludeHistory=true`)
       if (!response.ok) {
         throw new Error('Failed to fetch posts')
       }
 
-      const { data } = await response.json()
-      const posts = data.posts
+      const data = await response.json()
+      const postsData = Array.isArray(data) ? data : data.posts || []
       
-      if (posts.length < 9) {
+      if (postsData.length < 9) {
         setHasMore(false)
       }
 
-      setPosts(prev => (append ? [...prev, ...posts] : posts))
-    } catch {
-      setHasMore(false) // Prevents infinite loop
+      setPosts(prev => (append ? [...prev, ...postsData] : postsData))
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+      setHasMore(false)
+      toast.error('Failed to load posts')
+      setPosts(prev => append ? prev : [])
     } finally {
       setLoading(false)
       setIsLoadingMore(false)
