@@ -1,10 +1,11 @@
+// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@next-auth/prisma-adapter'; // Changed to next-auth adapter
-import { prisma } from '@/lib/prisma';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { prisma, ensureConnection } from '@/lib/prisma';
 
 const handler = NextAuth({
-  debug: true,
+  debug: process.env.NODE_ENV !== 'production',
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -20,42 +21,34 @@ const handler = NextAuth({
     }),
   ],
   session: {
-    strategy: 'jwt', // Explicitly set session strategy
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log('Sign in callback:', { user, account, profile });
+      // Ensure DB connection before sign-in
+      const connected = await ensureConnection();
+      if (!connected) {
+        throw new Error('Database connection failed during sign-in');
+      }
       return true;
     },
-    async session({ session, token, user }) { // Updated to handle both JWT and database sessions
-      console.log('Session callback:', { session, token, user });
-      
-      // For JWT strategy
+    async session({ session, token }) {
       if (session?.user && token?.sub) {
         session.user.id = token.sub;
       }
-      // For database strategy
-      else if (session?.user && user?.id) {
-        session.user.id = user.id;
-      }
-      
       return session;
     },
     async jwt({ token, user }) {
-      // Save the user ID to the token right after signin
       if (user) {
         token.userId = user.id;
       }
       return token;
     }
   },
-  events: {
-    async createUser(message) {
-      console.log('User created:', message);
-    },
-    async signIn(message) {
-      console.log('Sign in event:', message);
-    },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
   },
 });
 
