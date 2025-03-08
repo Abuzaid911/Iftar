@@ -9,7 +9,7 @@ export const notify = {
         border: '1px solid rgba(247, 181, 56, 0.1)',
       },
       iconTheme: {
-        primary: '#F7B538',
+        primary: '#F7B539',
         secondary: '#000',
       },
     })
