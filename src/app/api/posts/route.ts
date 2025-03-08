@@ -1,3 +1,4 @@
+// src/app/api/posts/route.ts
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { v2 as cloudinary } from 'cloudinary'
